@@ -72,7 +72,7 @@ public class ImageFilterApp extends Application {
 
     private void applyFilter() {
         String selectedFilter = filterDropdown.getValue();
-        // Implement filter logic based on the selectedFilter
+        // Implement filter code based on the selectedFilter
         // Apply the filter to the imageView
         // Example: imageView.setEffect(new SomeFilterEffect());
     }
