@@ -95,7 +95,7 @@ public class ImageFilterApp extends Application {
             for (int x = 0; x < width; x++) {
                 int rgb = pixelReader.getArgb(x, y);
 
-                int alpha = (rgb >> 24) & 0xFF;
+
                 int red = (rgb >> 16) & 0xFF;
                 int green = (rgb >> 8) & 0xFF;
                 int blue = rgb & 0xFF;
@@ -106,7 +106,7 @@ public class ImageFilterApp extends Application {
                 int newBlue = (int) Math.min(255, (0.272 * red + 0.534 * green + 0.131 * blue));
 
                 // Apply the sepia effect
-                int sepiaRgb = (alpha << 24) | (newRed << 16) | (newGreen << 8) | newBlue;
+                int sepiaRgb = (newRed << 16) | (newGreen << 8) | newBlue;
                 pixelWriter.setArgb(x, y, sepiaRgb);
             }
         }
