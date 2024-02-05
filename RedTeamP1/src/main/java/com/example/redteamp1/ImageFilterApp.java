@@ -9,6 +9,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -38,7 +39,7 @@ public class ImageFilterApp extends Application {
 
         // Filter Dropdown
         filterDropdown = new ChoiceBox<>();
-        filterDropdown.getItems().addAll("Grey Scale", "Inverted", "Gaussian", "Sepia", "Increase Brightness");
+        filterDropdown.getItems().addAll("Grey Scale", "Womp Womp", "Inverted", "Gaussian", "Sepia", "Increase Brightness");
         filterDropdown.setValue("Select Filter");
 
         // Apply Filter Button
@@ -73,7 +74,71 @@ public class ImageFilterApp extends Application {
     private void applyFilter() {
         String selectedFilter = filterDropdown.getValue();
         // Implement filter code based on the selectedFilter
+
+        if ("Grey Scale".equals(selectedFilter)) {
+            convertToGrayscale();
+        }
+
+        if ("Womp Womp".equals(selectedFilter)) {
+            convertToWompWomp();
+        }
+
         // Apply the filter to the imageView
         // Example: imageView.setEffect(new SomeFilterEffect());
     }
+
+    private void convertToGrayscale() {
+        Image originalImage = imageView.getImage();
+        int width = (int) originalImage.getWidth();
+        int height = (int) originalImage.getHeight();
+
+        javafx.scene.image.WritableImage grayscaleImage = new javafx.scene.image.WritableImage(width, height);
+        javafx.scene.image.PixelWriter pixelWriter = grayscaleImage.getPixelWriter();
+
+        javafx.scene.image.PixelReader pixelReader = originalImage.getPixelReader();
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                // Get the color of each pixel
+                Color color = pixelReader.getColor(x, y);
+
+                // Calculate grayscale value
+                double grayscaleValue = (color.getRed() + color.getGreen() + color.getBlue()) / 3;
+
+                // Set the grayscale color to the pixel
+                pixelWriter.setColor(x, y, Color.color(grayscaleValue, grayscaleValue, grayscaleValue));
+            }
+        }
+
+        imageView.setImage(grayscaleImage);
+    }
+
+    private void convertToWompWomp() {
+        Image originalImage = imageView.getImage();
+        int width = (int) originalImage.getWidth();
+        int height = (int) originalImage.getHeight();
+
+        javafx.scene.image.WritableImage wompWompImage = new javafx.scene.image.WritableImage(width, height);
+        javafx.scene.image.PixelWriter pixelWriter = wompWompImage.getPixelWriter();
+
+        javafx.scene.image.PixelReader pixelReader = originalImage.getPixelReader();
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                // Get the color of each pixel
+                Color color = pixelReader.getColor(x, y);
+
+                // Preserve the original red and green values, apply filtering to blue
+                double red = color.getRed();
+                double green = color.getGreen();
+                double blue = Math.min(color.getBlue() * 3, 1.0); // Ensure blue doesn't exceed 1.0
+
+                // Set the wompWomp color to the pixel
+                pixelWriter.setColor(x, y, Color.color(red, green, blue));
+            }
+        }
+
+        imageView.setImage(wompWompImage);
+    }
+
 }
