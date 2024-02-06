@@ -85,8 +85,11 @@ public class ImageFilterApp extends Application {
         if ("Womp Womp".equals(selectedFilter)) {
             convertToWompWomp();
         }
+        if ("Sepia".equals(selectedFilter)) {
+            applySepiaFilter();
+        }
 
-        imageView.setEffect(new SepiaTone());
+        //imageView.setEffect(new SepiaTone());
         // Implement filter logic based on the selectedFilter
         // Apply the filter to the imageView
         // Example: imageView.setEffect(new SomeFilterEffect());
@@ -147,7 +150,7 @@ public class ImageFilterApp extends Application {
     }
 
 
-// Applies the sepia filter using Pixel writer and Writable image class
+    // Applies the sepia filter using Pixel writer and Writable image class
     private void applySepiaFilter() {
         Image image = imageView.getImage();
         PixelReader pixelReader = image.getPixelReader();
@@ -158,24 +161,28 @@ public class ImageFilterApp extends Application {
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                int rgb = pixelReader.getArgb(x, y);
+                int argb = pixelReader.getArgb(x, y);
 
-
-                int red = (rgb >> 16) & 0xFF;
-                int green = (rgb >> 8) & 0xFF;
-                int blue = rgb & 0xFF;
+                // Extract alpha, red, green, and blue components
+                int alpha = (argb >> 24) & 0xFF;
+                int red = (argb >> 16) & 0xFF;
+                int green = (argb >> 8) & 0xFF;
+                int blue = argb & 0xFF;
 
                 // Calculate sepia values
                 int newRed = (int) Math.min(255, (0.393 * red + 0.769 * green + 0.189 * blue));
                 int newGreen = (int) Math.min(255, (0.349 * red + 0.686 * green + 0.168 * blue));
                 int newBlue = (int) Math.min(255, (0.272 * red + 0.534 * green + 0.131 * blue));
 
-                // Apply the sepia effect
-                int sepiaRgb = (newRed << 16) | (newGreen << 8) | newBlue;
-                pixelWriter.setArgb(x, y, sepiaRgb);
+                // Compose new ARGB value with preserved alpha
+                int sepiaArgb = (alpha << 24) | (newRed << 16) | (newGreen << 8) | newBlue;
+
+                // Write the new ARGB value to the writable image
+                pixelWriter.setArgb(x, y, sepiaArgb);
             }
         }
 
+        // Set the modified image with sepia filter applied
         imageView.setImage(writableImage);
     }
 }
