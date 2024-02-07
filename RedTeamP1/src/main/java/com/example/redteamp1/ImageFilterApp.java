@@ -88,9 +88,12 @@ public class ImageFilterApp extends Application {
         if ("Sepia".equals(selectedFilter)) {
             applySepiaFilter();
         }
+<<<<<<< HEAD
         if ("Increase Brightness".equals(selectedFilter)){
             increaseBrightness();
         }
+=======
+>>>>>>> main
 
         //imageView.setEffect(new SepiaTone());
         // Implement filter logic based on the selectedFilter
@@ -188,6 +191,7 @@ public class ImageFilterApp extends Application {
         // Set the modified image with sepia filter applied
         imageView.setImage(writableImage);
     }
+<<<<<<< HEAD
 
     //this method increases the brightness of the original image
     private void increaseBrightness() {
@@ -217,4 +221,6 @@ public class ImageFilterApp extends Application {
         } // set the viewed image as the new image with increased brightness
         imageView.setImage(brightnessImage);
     }
+=======
+>>>>>>> main
 }
