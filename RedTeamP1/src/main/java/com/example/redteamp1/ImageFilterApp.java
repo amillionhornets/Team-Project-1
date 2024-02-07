@@ -42,7 +42,7 @@ public class ImageFilterApp extends Application {
 
         // Filter Dropdown
         filterDropdown = new ChoiceBox<>();
-        filterDropdown.getItems().addAll("Grey Scale", "Womp Womp", "Inverted", "Gaussian", "Sepia", "Increase Brightness");
+        filterDropdown.getItems().addAll("Grey Scale", "Womp Womp", "Negative", "Gaussian", "Sepia", "Increase Brightness");
         filterDropdown.setValue("Select Filter");
 
         // Apply Filter Button
@@ -85,9 +85,18 @@ public class ImageFilterApp extends Application {
         if ("Womp Womp".equals(selectedFilter)) {
             convertToWompWomp();
         }
+
+        if ("Negative".equals(selectedFilter)) {
+            convertToNegative();
+        }
+
         if ("Sepia".equals(selectedFilter)) {
             applySepiaFilter();
         }
+
+
+
+
 
         //imageView.setEffect(new SepiaTone());
         // Implement filter logic based on the selectedFilter
@@ -184,5 +193,30 @@ public class ImageFilterApp extends Application {
 
         // Set the modified image with sepia filter applied
         imageView.setImage(writableImage);
+    }
+
+    private void convertToNegative() {
+        Image originalImage = imageView.getImage();
+        int width = (int) originalImage.getWidth();
+        int height = (int) originalImage.getHeight();
+
+        javafx.scene.image.WritableImage negativeImage = new javafx.scene.image.WritableImage(width, height);
+        javafx.scene.image.PixelWriter pixelWriter = negativeImage.getPixelWriter();
+        javafx.scene.image.PixelReader pixelReader = originalImage.getPixelReader();
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                // Get the color of each pixel
+                Color color = pixelReader.getColor(x, y);
+
+                // Convert color channel values to the range [0, 255] before negation
+                int red = (int) (255 * (1 - color.getRed()));
+                int green = (int) (255 * (1 - color.getGreen()));
+                int blue = (int) (255 * (1 - color.getBlue()));
+
+                pixelWriter.setColor(x, y, Color.rgb(red, green, blue));
+            }
+        }
+        imageView.setImage(negativeImage);
     }
 }
