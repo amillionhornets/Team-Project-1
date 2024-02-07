@@ -88,6 +88,12 @@ public class ImageFilterApp extends Application {
         if ("Sepia".equals(selectedFilter)) {
             applySepiaFilter();
         }
+<<<<<<< HEAD
+        if ("Increase Brightness".equals(selectedFilter)){
+            increaseBrightness();
+        }
+=======
+>>>>>>> main
 
         //imageView.setEffect(new SepiaTone());
         // Implement filter logic based on the selectedFilter
@@ -185,4 +191,36 @@ public class ImageFilterApp extends Application {
         // Set the modified image with sepia filter applied
         imageView.setImage(writableImage);
     }
+<<<<<<< HEAD
+
+    //this method increases the brightness of the original image
+    private void increaseBrightness() {
+        Image originalImage = imageView.getImage();
+        int width = (int) originalImage.getWidth();
+        int height = (int) originalImage.getHeight();
+
+        javafx.scene.image.WritableImage brightnessImage = new javafx.scene.image.WritableImage(width, height);
+        javafx.scene.image.PixelWriter pixelWriter = brightnessImage.getPixelWriter();
+        javafx.scene.image.PixelReader pixelReader = originalImage.getPixelReader();
+
+        // loop through each pixel coordinate of the image
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+
+                // Get the color of each pixel
+                Color color = pixelReader.getColor(x, y);
+
+                //multiply each value by 1.5
+                double red = Math.min(color.getRed()*1.5,1);
+                double green = Math.min(color.getGreen()*1.5,1);
+                double blue = Math.min(color.getBlue()*1.5,1);
+
+                // Set the brightness adjustment to the pixel
+                pixelWriter.setColor(x, y, Color.color(red, green, blue));
+            }
+        } // set the viewed image as the new image with increased brightness
+        imageView.setImage(brightnessImage);
+    }
+=======
+>>>>>>> main
 }
