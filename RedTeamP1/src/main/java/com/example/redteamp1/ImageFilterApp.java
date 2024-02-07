@@ -93,11 +93,17 @@ public class ImageFilterApp extends Application {
         if ("Sepia".equals(selectedFilter)) {
             applySepiaFilter();
         }
+<<<<<<< HEAD
 
 
 
 
 
+=======
+        if ("Increase Brightness".equals(selectedFilter)){
+            increaseBrightness();
+        }
+>>>>>>> 27bb31377130acf15905ca8c9aa735126fe658e9
         //imageView.setEffect(new SepiaTone());
         // Implement filter logic based on the selectedFilter
         // Apply the filter to the imageView
@@ -195,11 +201,17 @@ public class ImageFilterApp extends Application {
         imageView.setImage(writableImage);
     }
 
+<<<<<<< HEAD
     private void convertToNegative() {
+=======
+    //this method increases the brightness of the original image
+    private void increaseBrightness() {
+>>>>>>> 27bb31377130acf15905ca8c9aa735126fe658e9
         Image originalImage = imageView.getImage();
         int width = (int) originalImage.getWidth();
         int height = (int) originalImage.getHeight();
 
+<<<<<<< HEAD
         javafx.scene.image.WritableImage negativeImage = new javafx.scene.image.WritableImage(width, height);
         javafx.scene.image.PixelWriter pixelWriter = negativeImage.getPixelWriter();
         javafx.scene.image.PixelReader pixelReader = originalImage.getPixelReader();
@@ -219,4 +231,29 @@ public class ImageFilterApp extends Application {
         }
         imageView.setImage(negativeImage);
     }
+=======
+        javafx.scene.image.WritableImage brightnessImage = new javafx.scene.image.WritableImage(width, height);
+        javafx.scene.image.PixelWriter pixelWriter = brightnessImage.getPixelWriter();
+        javafx.scene.image.PixelReader pixelReader = originalImage.getPixelReader();
+
+        // loop through each pixel coordinate of the image
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+
+                // Get the color of each pixel
+                Color color = pixelReader.getColor(x, y);
+
+                //multiply each value by 1.5
+                double red = Math.min(color.getRed()*1.5,1);
+                double green = Math.min(color.getGreen()*1.5,1);
+                double blue = Math.min(color.getBlue()*1.5,1);
+
+                // Set the brightness adjustment to the pixel
+                pixelWriter.setColor(x, y, Color.color(red, green, blue));
+            }
+        } // set the viewed image as the new image with increased brightness
+        imageView.setImage(brightnessImage);
+    }
+
+>>>>>>> 27bb31377130acf15905ca8c9aa735126fe658e9
 }
