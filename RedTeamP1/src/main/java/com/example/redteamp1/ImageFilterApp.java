@@ -1,32 +1,24 @@
 package com.example.redteamp1;
 
 import javafx.application.Application;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.effect.SepiaTone;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
-import javafx.embed.swing.SwingFXUtils;
-
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+//import java.awt.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import  javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.util.Arrays;
+import java.io.File;
 import java.util.Objects;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
@@ -86,6 +78,7 @@ public class ImageFilterApp extends Application {
             imageView.setImage(image);
         }
     }
+
     private void applyFilter() {
         String selectedFilter = filterDropdown.getValue();
         // Implement filter code based on the selectedFilter
@@ -106,20 +99,18 @@ public class ImageFilterApp extends Application {
             applySepiaFilter();
         }
 
-        if ("Increase Brightness".equals(selectedFilter)){
+        if ("Increase Brightness".equals(selectedFilter)) {
             increaseBrightness();
         }
-        //imageView.setEffect(new SepiaTone());
-        // Implement filter logic based on the selectedFilter
-        // Apply the filter to the imageView
-        // Example: imageView.setEffect(new SomeFilterEffect());
-        if(Objects.equals(selectedFilter, "Gaussian")){
+        if (Objects.equals(selectedFilter, "Gaussian")) {
             applyFilterBlur();
         }
     }
+
     private void applyFilterBlur() {
         System.out.println("Blur");
         int[][] kernel = new int[7][7];
+
 
         // Converts the javafx Image type to a buffered img type
         Image nonBufferedImage = imageView.getImage();
@@ -130,9 +121,11 @@ public class ImageFilterApp extends Application {
                     kernel = inputKernelData(x, y, kernel, img);
                     kernel = fillKernelValues(kernel);
 
+
                     double StDR = 6/2;
                     double StDG = 6/2;
                     double StDB = 6/2;
+
 
                     /* (kernel[centerKernel][centerKernel] & 0xff0000) >> 16 --> Makes Red
                      * (kernel[centerKernel][centerKernel] & 0xff00) >> 8    --> Makes Green
@@ -142,18 +135,18 @@ public class ImageFilterApp extends Application {
                     double[][] greenGaussianKernel = getGaussianWeight(StDG, kernel, 0xff00, 8);
                     double[][] blueGaussianKernel = getGaussianWeight(StDB, kernel, 0xff, 0);
 
+
                     int red = convolutionKernelResult(redGaussianKernel, kernel, 0xff0000, 16);
                     int green = convolutionKernelResult(greenGaussianKernel, kernel, 0xff00, 8);
                     int blue = convolutionKernelResult(blueGaussianKernel, kernel, 0xff, 0);
 
-                    Color newPixelColor = new Color(red, green, blue, 255);
-                    img.setRGB(x, y, newPixelColor.getRGB());
+                    int newPixelColor = (red << 16) | (green << 8) | blue;
+                    img.setRGB(x, y, newPixelColor);
                 }
             }
             imageView.setImage(SwingFXUtils.toFXImage(img, null));
         }
     }
-
     private static double[][] getGaussianWeight(double sigma, int[][] kernel, int shift, int bitShift){
         double[][] gaussianWeightKernel = new double[kernel.length][kernel.length];
         double sum = 0;
@@ -167,9 +160,11 @@ public class ImageFilterApp extends Application {
                 int ySquared = (int) Math.pow(y, 2);
                 double sigmaSquared = Math.pow(sigma, 2);
 
+
                 double exponent = -(xSquared + ySquared) / (2 * sigmaSquared);
                 double halfOfTwoTimesPITimesSigmaSquared = (1/(2 * Math.PI * sigmaSquared));
                 double gaussianResult =  halfOfTwoTimesPITimesSigmaSquared * Math.exp(exponent);
+
 
                 gaussianWeightKernel[(x+kernelHalf)][(y+kernelHalf)] = gaussianResult;
                 sum+=gaussianResult;
@@ -183,9 +178,9 @@ public class ImageFilterApp extends Application {
             }
         }
 
+
         return gaussianWeightKernel;
     }
-
     private static int convolutionKernelResult(double[][] gaussianKernel, int[][] kernel, int shift, int bitShift){
         double convolutionSum = 0;
         for(int y = 0; y < gaussianKernel.length; y++){
@@ -201,6 +196,7 @@ public class ImageFilterApp extends Application {
         }
         return (int)(convolutionSum);
     }
+
 
     /*
      * Input Kernel Data searches the relative pixels to the current x and y
@@ -294,7 +290,8 @@ public class ImageFilterApp extends Application {
         }
         return kernel;
     }
-}
+
+
     private void convertToGrayscale() {
         Image originalImage = imageView.getImage();
         int width = (int) originalImage.getWidth();
@@ -388,6 +385,30 @@ public class ImageFilterApp extends Application {
 
 
     private void convertToNegative() {
+        Image originalImage = imageView.getImage();
+        int width = (int) originalImage.getWidth();
+        int height = (int) originalImage.getHeight();
+
+        javafx.scene.image.WritableImage negativeImage = new javafx.scene.image.WritableImage(width, height);
+        javafx.scene.image.PixelWriter pixelWriter = negativeImage.getPixelWriter();
+        javafx.scene.image.PixelReader pixelReader = originalImage.getPixelReader();
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                // Get the color of each pixel
+                Color color = pixelReader.getColor(x, y);
+
+                // Convert color channel values to the range [0, 255] before negation
+                int red = (int) (255 * (1 - color.getRed()));
+                int green = (int) (255 * (1 - color.getGreen()));
+                int blue = (int) (255 * (1 - color.getBlue()));
+
+                pixelWriter.setColor(x, y, Color.rgb(red, green, blue));
+            }
+        }
+        imageView.setImage(negativeImage);
+    }
+
     //this method increases the brightness of the original image
     private void increaseBrightness() {
         Image originalImage = imageView.getImage();
@@ -413,28 +434,5 @@ public class ImageFilterApp extends Application {
         }
         imageView.setImage(negativeImage);
     }
-
-        javafx.scene.image.WritableImage brightnessImage = new javafx.scene.image.WritableImage(width, height);
-        javafx.scene.image.PixelWriter pixelWriter = brightnessImage.getPixelWriter();
-        javafx.scene.image.PixelReader pixelReader = originalImage.getPixelReader();
-
-        // loop through each pixel coordinate of the image
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-
-                // Get the color of each pixel
-                Color color = pixelReader.getColor(x, y);
-
-                //multiply each value by 1.5
-                double red = Math.min(color.getRed()*1.5,1);
-                double green = Math.min(color.getGreen()*1.5,1);
-                double blue = Math.min(color.getBlue()*1.5,1);
-
-                // Set the brightness adjustment to the pixel
-                pixelWriter.setColor(x, y, Color.color(red, green, blue));
-            }
-        } // set the viewed image as the new image with increased brightness
-        imageView.setImage(brightnessImage);
-    }
-
 }
+
