@@ -16,6 +16,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.Objects;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
@@ -91,82 +92,84 @@ public class ImageFilterApp extends Application {
         // Converts the javafx Image type to a buffered img type
         Image nonBufferedImage = imageView.getImage();
         BufferedImage img = SwingFXUtils.fromFXImage(nonBufferedImage, null);
+        for(int i = 0; i < 5; i++) {
+            for (int y = 0; y < img.getHeight(); y++) {
+                for (int x = 0; x < img.getWidth(); x++) {
+                    kernel = inputKernelData(x, y, kernel, img);
+                    kernel = fillKernelValues(kernel);
 
-        for(int y = 0; y < img.getHeight(); y++){
-            for(int x = 0; x < img.getWidth(); x++){
+                    double StDR = 6/2;
+                    double StDG = 6/2;
+                    double StDB = 6/2;
 
+                    /* (kernel[centerKernel][centerKernel] & 0xff0000) >> 16 --> Makes Red
+                     * (kernel[centerKernel][centerKernel] & 0xff00) >> 8    --> Makes Green
+                     * (kernel[centerKernel][centerKernel] & 0xff)           --> Makes Blue
+                     */
+                    double[][] redGaussianKernel = getGaussianWeight(StDR, kernel, 0xff0000, 16);
+                    double[][] greenGaussianKernel = getGaussianWeight(StDG, kernel, 0xff00, 8);
+                    double[][] blueGaussianKernel = getGaussianWeight(StDB, kernel, 0xff, 0);
 
-                kernel = inputKernelData(x, y, kernel, img);
-                kernel = fillKernelValues(kernel);
+                    int red = convolutionKernelResult(redGaussianKernel, kernel, 0xff0000, 16);
+                    int green = convolutionKernelResult(greenGaussianKernel, kernel, 0xff00, 8);
+                    int blue = convolutionKernelResult(blueGaussianKernel, kernel, 0xff, 0);
 
-                double meanR = getKernelMean(kernel, 0xff0000, 16);
-                double meanG = getKernelMean(kernel, 0xff00, 8);
-                double meanB = getKernelMean(kernel, 0xff, 0);
-
-                double StDR = getStandardDeviantion(kernel, meanR, 0xff0000, 16);
-                double StDG = getStandardDeviantion(kernel, meanG, 0xff00, 8);
-                double StDB = getStandardDeviantion(kernel, meanB, 0xff, 0);
-                int centerKernel = (int)Math.floor(kernel.length/2);
-                int red = getNormalDistrubutionWithMean(meanR, StDR, (kernel[centerKernel][centerKernel] & 0xff0000) >> 16);
-                int green = getNormalDistrubutionWithMean(meanG, StDG, (kernel[centerKernel][centerKernel] & 0xff00) >> 8);
-                int blue = getNormalDistrubutionWithMean(meanB, StDB, (kernel[centerKernel][centerKernel] & 0xff));
-                Color newPixelColor = new Color(red, green, blue, 255);
-                img.setRGB(x, y, newPixelColor.getRGB());
+                    Color newPixelColor = new Color(red, green, blue, 255);
+                    img.setRGB(x, y, newPixelColor.getRGB());
+                }
             }
+            imageView.setImage(SwingFXUtils.toFXImage(img, null));
         }
-        imageView.setImage(SwingFXUtils.toFXImage(img, null));
     }
 
-    private static int getNormalDistrubutionWithMean(double mean, double standardDeviation, double kernelValue){
-        double x = (-1 * Math.pow((kernelValue - mean)/(standardDeviation), 2)) / 2;
-        double gausianResult = (standardDeviation * Math.sqrt(2 * Math.PI)) * Math.pow(Math.E, x);
-//        double gaussianResult = ((Math.sqrt(2*Math.PI*Math.pow(standardDeviation, 2)))) * Math.pow(Math.E, -((kernelValue * kernelValue)/(2*(standardDeviation * standardDeviation))));
-
-        double kernelColor = mean;
-
-        if(kernelColor > 255){
-            kernelColor = 255;
-        } else if (kernelColor < 0) {
-            kernelColor = 0;
-        }
-        return (int)kernelColor;
-    }
-
-    private static double getKernelMean(int[][] kernel,int shift, int bitShift){
-        double amountOfNumsInKernel = kernel.length * kernel.length;
-        double total = 0;
-        double mean = 0;
-        for(int y = 0; y < kernel.length; y++){
-            for(int x = 0; x < kernel.length; x++){
-                total+=(kernel[x][y] & shift) >> bitShift;
-            }
-        }
-        mean = total/amountOfNumsInKernel;
-        // Return the mean rounded to two decimal places
-        return ((double)Math.round(mean * 100) / 100);
-    }
-
-    private static double getStandardDeviantion(int[][] kernel, double mean, int shift, int bitShift){
-        // Sigma is the sumation of my values after they are subtracted from the mean and divided
-        //  by the total amount of values
-        ArrayList<Double> sigma = new ArrayList<>();
-        double nextNum = 0;
-        for(int y = 0; y < kernel.length; y++){
-            for(int x = 0; x < kernel.length; x++){
-                nextNum = (kernel[x][y] & shift >> bitShift) - mean;
-                nextNum = Math.pow(nextNum, 2);
-                sigma.add(nextNum);
-            }
-        }
-        // Find the sum of sigma array
+    private static double[][] getGaussianWeight(double sigma, int[][] kernel, int shift, int bitShift){
+        double[][] gaussianWeightKernel = new double[kernel.length][kernel.length];
         double sum = 0;
-        for(double num : sigma){
-            sum+=num;
+        int kernelHalf = (int) Math.floor(kernel.length/2);
+        for(int y = (int) (-1 * Math.floor(kernel.length/2)); y <= Math.floor(kernel.length/2); y++){
+            for(int x = (int) (-1 * Math.floor(kernel.length/2)); x <= Math.floor(kernel.length/2); x++){
+                // Ryan Seaman's Gaussian formula
+                //double gaussianResult = ((Math.sqrt(2*Math.PI*Math.pow(standardDeviation, 2)))) * Math.pow(Math.E,
+                //          -((kernel[x][y] * kernel[x][y])/(2*(standardDeviation * standardDeviation))));
+                int xSquared = (int) Math.pow(x, 2);
+                int ySquared = (int) Math.pow(y, 2);
+                double sigmaSquared = Math.pow(sigma, 2);
+
+                double exponent = -(xSquared + ySquared) / (2 * sigmaSquared);
+                double halfOfTwoTimesPITimesSigmaSquared = (1/(2 * Math.PI * sigmaSquared));
+                double gaussianResult =  halfOfTwoTimesPITimesSigmaSquared * Math.exp(exponent);
+
+                gaussianWeightKernel[(x+kernelHalf)][(y+kernelHalf)] = gaussianResult;
+                sum+=gaussianResult;
+            }
         }
-        double standardDeviation = Math.sqrt(sum/(kernel.length * kernel.length));
-        // Round StD to 3 deciaml places
-        return ((double)Math.round(standardDeviation * 1000)/1000);
+        // Normalize weight by dividing each value by the sum.
+        // This ensures all the weights are from the values 0 - 1.
+        for(int y = 0; y < gaussianWeightKernel.length; y++){
+            for(int x = 0; x < gaussianWeightKernel.length; x++){
+                gaussianWeightKernel[x][y] /= sum;
+            }
+        }
+
+        return gaussianWeightKernel;
     }
+
+    private static int convolutionKernelResult(double[][] gaussianKernel, int[][] kernel, int shift, int bitShift){
+        double convolutionSum = 0;
+        for(int y = 0; y < gaussianKernel.length; y++){
+            for(int x = 0; x < gaussianKernel.length; x++){
+                int kernelValue = (kernel[x][y] >> bitShift) & 0xFF;
+                convolutionSum+=(kernelValue * gaussianKernel[x][y]);
+            }
+        }
+        if(convolutionSum > 255){
+            convolutionSum = 255;
+        }else if(convolutionSum < 0) {
+            convolutionSum = 0;
+        }
+        return (int)(convolutionSum);
+    }
+
     /*
      * Input Kernel Data searches the relative pixels to the current x and y
      * If the new positions of x or y is negative or is greater than the bounds of the image
@@ -174,13 +177,14 @@ public class ImageFilterApp extends Application {
      * If the new position are on the image get the rgb value of that pixel
      */
     private static int[][] inputKernelData(int currentX, int currentY, int[][] kernel, BufferedImage nonBlurredImage) {
-        int colorBinary[][] = new int[7][7];
-        for(int y = -3; y <= Math.floor(kernel.length/2); y++){
-            for(int x = -3; x <= Math.floor(kernel.length/2); x++){
+        int colorBinary[][] = new int[kernel.length][kernel.length];
+        int kernelHalf = (int) Math.floor(kernel.length/2);
+        for(int y = -kernelHalf; y <= kernelHalf; y++){
+            for(int x = -kernelHalf; x <= kernelHalf; x++){
                 int newX = currentX + x;
                 int newY = currentY + y;
-                int kernelXpos = (x + (kernel.length/2));
-                int kernelYpos = (y + (kernel.length/2));
+                int kernelXpos = (x + kernelHalf);
+                int kernelYpos = (y + kernelHalf);
                 if(newX >= 0 && newY >= 0 && newY < nonBlurredImage.getHeight() && newX < nonBlurredImage.getWidth()){
                     colorBinary[kernelXpos][kernelYpos] = nonBlurredImage.getRGB(newX, newY);
                 }else{
@@ -258,6 +262,4 @@ public class ImageFilterApp extends Application {
         }
         return kernel;
     }
-
 }
-
