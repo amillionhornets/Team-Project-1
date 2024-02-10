@@ -20,16 +20,14 @@ import javafx.scene.image.WritableImage;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
-
-import org.apache.commons.math3.distribution.NormalDistribution;
 
 public class ImageFilterApp extends Application {
 
     private ImageView originalImageView;
     private ImageView filteredImageView;
     private ChoiceBox<String> filterDropdown;
-    private ImageView imageView;
 
     public static void main(String[] args) {
         launch(args);
@@ -62,10 +60,13 @@ public class ImageFilterApp extends Application {
         Button applyFilterButton = new Button("Apply Filter");
         applyFilterButton.setOnAction(e -> applyFilter());
 
-        // Layout
+        // Save Image Button
+        Button saveImageButton = new Button("Save Filtered Image");
+        saveImageButton.setOnAction(e -> saveImage());
+
         HBox hbox = new HBox(10);
         hbox.setPadding(new Insets(10, 10, 10, 10));
-        hbox.getChildren().addAll(insertImageButton, filterDropdown, applyFilterButton, originalImageView);
+        hbox.getChildren().addAll(insertImageButton, filterDropdown, applyFilterButton, saveImageButton, originalImageView);
 
         // VBox to stack original and filtered images
         VBox vbox = new VBox(10);
@@ -88,6 +89,27 @@ public class ImageFilterApp extends Application {
         if (selectedFile != null) {
             Image image = new Image(selectedFile.toURI().toString());
             originalImageView.setImage(image);
+        }
+    }
+
+    private void saveImage() {
+        Image filteredImage = filteredImageView.getImage();
+        if (filteredImage != null) {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("PNG Files", "*.png"),
+                    new FileChooser.ExtensionFilter("JPEG Files", "*.jpg", "*.jpeg")
+            );
+            File file = fileChooser.showSaveDialog(null);
+
+            if (file != null) {
+                try {
+                    BufferedImage bufferedImage = SwingFXUtils.fromFXImage(filteredImage, null);
+                    javax.imageio.ImageIO.write(bufferedImage, "png", file);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 
@@ -128,7 +150,7 @@ public class ImageFilterApp extends Application {
         // Converts the javafx Image type to a buffered img type
         Image nonBufferedImage = originalImageView.getImage();
         BufferedImage img = SwingFXUtils.fromFXImage(nonBufferedImage, null);
-        for(int i = 0; i < 5; i++) {
+        for(int i = 0; i < 1; i++) {
             for (int y = 0; y < img.getHeight(); y++) {
                 for (int x = 0; x < img.getWidth(); x++) {
                     kernel = inputKernelData(x, y, kernel, img);
