@@ -9,6 +9,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 //import java.awt.Color;
 import javafx.stage.FileChooser;
@@ -25,8 +26,10 @@ import org.apache.commons.math3.distribution.NormalDistribution;
 
 public class ImageFilterApp extends Application {
 
-    private ImageView imageView;
+    private ImageView originalImageView;
+    private ImageView filteredImageView;
     private ChoiceBox<String> filterDropdown;
+    private ImageView imageView;
 
     public static void main(String[] args) {
         launch(args);
@@ -36,10 +39,15 @@ public class ImageFilterApp extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Image Filter App");
 
-        // Image Section
-        imageView = new ImageView();
-        imageView.setFitWidth(300);
-        imageView.setFitHeight(300);
+        // Original Image Section
+        originalImageView = new ImageView();
+        originalImageView.setFitWidth(300);
+        originalImageView.setFitHeight(300);
+
+        // Filtered Image Section
+        filteredImageView = new ImageView();
+        filteredImageView.setFitWidth(300);
+        filteredImageView.setFitHeight(300);
 
         // Insert Image Button
         Button insertImageButton = new Button("Insert Image");
@@ -57,10 +65,14 @@ public class ImageFilterApp extends Application {
         // Layout
         HBox hbox = new HBox(10);
         hbox.setPadding(new Insets(10, 10, 10, 10));
-        hbox.getChildren().addAll(insertImageButton, filterDropdown, applyFilterButton, imageView);
+        hbox.getChildren().addAll(insertImageButton, filterDropdown, applyFilterButton, originalImageView);
+
+        // VBox to stack original and filtered images
+        VBox vbox = new VBox(10);
+        vbox.getChildren().addAll(hbox, new HBox(originalImageView, filteredImageView));
 
         // Scene
-        Scene scene = new Scene(hbox, 650, 350);
+        Scene scene = new Scene(vbox, 650, 450);
         primaryStage.setScene(scene);
 
         primaryStage.show();
@@ -75,35 +87,36 @@ public class ImageFilterApp extends Application {
 
         if (selectedFile != null) {
             Image image = new Image(selectedFile.toURI().toString());
-            imageView.setImage(image);
+            originalImageView.setImage(image);
         }
     }
 
     private void applyFilter() {
         String selectedFilter = filterDropdown.getValue();
-        // Implement filter code based on the selectedFilter
 
-        if ("Grey Scale".equals(selectedFilter)) {
-            convertToGrayscale();
-        }
+        if (originalImageView.getImage() != null) {
+            // Clone the original image for comparison
+            Image originalImage = originalImageView.getImage();
+            originalImageView.setImage(originalImage);
 
-        if ("Womp Womp".equals(selectedFilter)) {
-            convertToWompWomp();
-        }
+            // Implement filter code based on the selectedFilter
+            if ("Grey Scale".equals(selectedFilter)) {
+                convertToGrayscale();
+            } else if ("Womp Womp".equals(selectedFilter)) {
+                convertToWompWomp();
+            } else if ("Negative".equals(selectedFilter)) {
+                convertToNegative();
+            } else if ("Sepia".equals(selectedFilter)) {
+                applySepiaFilter();
+            } else if ("Increase Brightness".equals(selectedFilter)) {
+                increaseBrightness();
+            } else if (Objects.equals(selectedFilter, "Gaussian")) {
+                applyFilterBlur();
+            }
 
-        if ("Negative".equals(selectedFilter)) {
-            convertToNegative();
-        }
-
-        if ("Sepia".equals(selectedFilter)) {
-            applySepiaFilter();
-        }
-
-        if ("Increase Brightness".equals(selectedFilter)) {
-            increaseBrightness();
-        }
-        if (Objects.equals(selectedFilter, "Gaussian")) {
-            applyFilterBlur();
+            // Display the filtered image
+            Image filteredImage = filteredImageView.getImage();
+            filteredImageView.setImage(filteredImage);
         }
     }
 
@@ -113,7 +126,7 @@ public class ImageFilterApp extends Application {
 
 
         // Converts the javafx Image type to a buffered img type
-        Image nonBufferedImage = imageView.getImage();
+        Image nonBufferedImage = originalImageView.getImage();
         BufferedImage img = SwingFXUtils.fromFXImage(nonBufferedImage, null);
         for(int i = 0; i < 5; i++) {
             for (int y = 0; y < img.getHeight(); y++) {
@@ -144,7 +157,7 @@ public class ImageFilterApp extends Application {
                     img.setRGB(x, y, newPixelColor);
                 }
             }
-            imageView.setImage(SwingFXUtils.toFXImage(img, null));
+            filteredImageView.setImage(SwingFXUtils.toFXImage(img, null));
         }
     }
     private static double[][] getGaussianWeight(double sigma, int[][] kernel, int shift, int bitShift){
@@ -293,7 +306,7 @@ public class ImageFilterApp extends Application {
 
 
     private void convertToGrayscale() {
-        Image originalImage = imageView.getImage();
+        Image originalImage = originalImageView.getImage();
         int width = (int) originalImage.getWidth();
         int height = (int) originalImage.getHeight();
 
@@ -315,11 +328,11 @@ public class ImageFilterApp extends Application {
             }
         }
 
-        imageView.setImage(grayscaleImage);
+        filteredImageView.setImage(grayscaleImage);
     }
 
     private void convertToWompWomp() {
-        Image originalImage = imageView.getImage();
+        Image originalImage = originalImageView.getImage();
         int width = (int) originalImage.getWidth();
         int height = (int) originalImage.getHeight();
 
@@ -343,13 +356,13 @@ public class ImageFilterApp extends Application {
             }
         }
 
-        imageView.setImage(wompWompImage);
+        filteredImageView.setImage(wompWompImage);
     }
 
 
     // Applies the sepia filter using Pixel writer and Writable image class
     private void applySepiaFilter() {
-        Image image = imageView.getImage();
+        Image image = originalImageView.getImage();
         PixelReader pixelReader = image.getPixelReader();
         int width = (int) image.getWidth();
         int height = (int) image.getHeight();
@@ -380,12 +393,12 @@ public class ImageFilterApp extends Application {
         }
 
         // Set the modified image with sepia filter applied
-        imageView.setImage(writableImage);
+        filteredImageView.setImage(writableImage);
     }
 
-
+//hiiiiiiiiiiiiiiiiiiiiiiiiii
     private void convertToNegative() {
-        Image originalImage = imageView.getImage();
+        Image originalImage = originalImageView.getImage();
         int width = (int) originalImage.getWidth();
         int height = (int) originalImage.getHeight();
 
@@ -406,33 +419,36 @@ public class ImageFilterApp extends Application {
                 pixelWriter.setColor(x, y, Color.rgb(red, green, blue));
             }
         }
-        imageView.setImage(negativeImage);
+        filteredImageView.setImage(negativeImage);
     }
 
     //this method increases the brightness of the original image
     private void increaseBrightness() {
-        Image originalImage = imageView.getImage();
+        Image originalImage = originalImageView.getImage();
         int width = (int) originalImage.getWidth();
         int height = (int) originalImage.getHeight();
 
-        javafx.scene.image.WritableImage negativeImage = new javafx.scene.image.WritableImage(width, height);
-        javafx.scene.image.PixelWriter pixelWriter = negativeImage.getPixelWriter();
+        javafx.scene.image.WritableImage brightnessImage = new javafx.scene.image.WritableImage(width, height);
+        javafx.scene.image.PixelWriter pixelWriter = brightnessImage.getPixelWriter();
         javafx.scene.image.PixelReader pixelReader = originalImage.getPixelReader();
 
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
+        // loop through each pixel coordinate of the image
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+
                 // Get the color of each pixel
                 Color color = pixelReader.getColor(x, y);
 
-                // Convert color channel values to the range [0, 255] before negation
-                int red = (int) (255 * (1 - color.getRed()));
-                int green = (int) (255 * (1 - color.getGreen()));
-                int blue = (int) (255 * (1 - color.getBlue()));
+                //multiply each value by 1.5
+                double red = Math.min(color.getRed()*1.5,1);
+                double green = Math.min(color.getGreen()*1.5,1);
+                double blue = Math.min(color.getBlue()*1.5,1);
 
-                pixelWriter.setColor(x, y, Color.rgb(red, green, blue));
+                // Set the brightness adjustment to the pixel
+                pixelWriter.setColor(x, y, Color.color(red, green, blue));
             }
-        }
-        imageView.setImage(negativeImage);
+        } // set the viewed image as the new image with increased brightness
+        filteredImageView.setImage(brightnessImage);
     }
 }
 
