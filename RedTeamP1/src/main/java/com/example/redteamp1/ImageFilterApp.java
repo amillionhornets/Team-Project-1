@@ -141,7 +141,8 @@ public class ImageFilterApp extends Application {
             filteredImageView.setImage(filteredImage);
         }
     }
-
+    // Makes the image a gaussian blur
+    // Made by Dylan
     private void applyFilterBlur() {
         System.out.println("Blur");
         int[][] kernel = new int[7][7];
@@ -153,35 +154,40 @@ public class ImageFilterApp extends Application {
         for(int i = 0; i < 1; i++) {
             for (int y = 0; y < img.getHeight(); y++) {
                 for (int x = 0; x < img.getWidth(); x++) {
+                    // Gets the surrounding values of the current pixel values.
                     kernel = inputKernelData(x, y, kernel, img);
                     kernel = fillKernelValues(kernel);
 
-
-                    double StDR = 6/2;
-                    double StDG = 6/2;
-                    double StDB = 6/2;
+                    int blurRadius = kernel.length;
+                    double StDR = (int)blurRadius/2;
+                    double StDG = (int)blurRadius/2;
+                    double StDB = (int)blurRadius/2;
 
 
                     /* (kernel[centerKernel][centerKernel] & 0xff0000) >> 16 --> Makes Red
                      * (kernel[centerKernel][centerKernel] & 0xff00) >> 8    --> Makes Green
                      * (kernel[centerKernel][centerKernel] & 0xff)           --> Makes Blue
                      */
+                    // Gets a weighted Gaussian kernel per RGB
                     double[][] redGaussianKernel = getGaussianWeight(StDR, kernel, 0xff0000, 16);
                     double[][] greenGaussianKernel = getGaussianWeight(StDG, kernel, 0xff00, 8);
                     double[][] blueGaussianKernel = getGaussianWeight(StDB, kernel, 0xff, 0);
 
-
+                    // The convolution kernel creates the new color for each RGB value
                     int red = convolutionKernelResult(redGaussianKernel, kernel, 0xff0000, 16);
                     int green = convolutionKernelResult(greenGaussianKernel, kernel, 0xff00, 8);
                     int blue = convolutionKernelResult(blueGaussianKernel, kernel, 0xff, 0);
 
+                    // Gets the new int with the color shift
                     int newPixelColor = (red << 16) | (green << 8) | blue;
+                    // Sets the new pixel
                     img.setRGB(x, y, newPixelColor);
                 }
             }
             filteredImageView.setImage(SwingFXUtils.toFXImage(img, null));
         }
     }
+    // Gaussian Weight is the y point on the calculated gaussian curve where x is the kernel value
     private static double[][] getGaussianWeight(double sigma, int[][] kernel, int shift, int bitShift){
         double[][] gaussianWeightKernel = new double[kernel.length][kernel.length];
         double sum = 0;
@@ -195,13 +201,15 @@ public class ImageFilterApp extends Application {
                 int ySquared = (int) Math.pow(y, 2);
                 double sigmaSquared = Math.pow(sigma, 2);
 
-
+                // Formula for Gaussian Kernel -->
+                // https://wikimedia.org/api/rest_v1/media/math/render/svg/6717136818f2166eba2db0cfc915d732add9c64f
                 double exponent = -(xSquared + ySquared) / (2 * sigmaSquared);
                 double halfOfTwoTimesPITimesSigmaSquared = (1/(2 * Math.PI * sigmaSquared));
                 double gaussianResult =  halfOfTwoTimesPITimesSigmaSquared * Math.exp(exponent);
 
 
                 gaussianWeightKernel[(x+kernelHalf)][(y+kernelHalf)] = gaussianResult;
+                // The sum should be equal to one
                 sum+=gaussianResult;
             }
         }
@@ -212,10 +220,9 @@ public class ImageFilterApp extends Application {
                 gaussianWeightKernel[x][y] /= sum;
             }
         }
-
-
         return gaussianWeightKernel;
     }
+    // Convolution is the summation of each kernel value and gaussian kernel value multiplied together.
     private static int convolutionKernelResult(double[][] gaussianKernel, int[][] kernel, int shift, int bitShift){
         double convolutionSum = 0;
         for(int y = 0; y < gaussianKernel.length; y++){
@@ -224,6 +231,7 @@ public class ImageFilterApp extends Application {
                 convolutionSum+=(kernelValue * gaussianKernel[x][y]);
             }
         }
+        // Makes sure the value is below 0 or above 255
         if(convolutionSum > 255){
             convolutionSum = 255;
         }else if(convolutionSum < 0) {
@@ -231,7 +239,6 @@ public class ImageFilterApp extends Application {
         }
         return (int)(convolutionSum);
     }
-
 
     /*
      * Input Kernel Data searches the relative pixels to the current x and y
@@ -326,7 +333,7 @@ public class ImageFilterApp extends Application {
         return kernel;
     }
 
-
+    // Converts the Image to Gray Scale by dividing each rgb value by 3.
     private void convertToGrayscale() {
         Image originalImage = originalImageView.getImage();
         int width = (int) originalImage.getWidth();
@@ -352,7 +359,8 @@ public class ImageFilterApp extends Application {
 
         filteredImageView.setImage(grayscaleImage);
     }
-
+    // Womp Womp Filter multiplies the blue value of the image by 3 making it a sad image.
+    // Made by Lucas
     private void convertToWompWomp() {
         Image originalImage = originalImageView.getImage();
         int width = (int) originalImage.getWidth();
@@ -383,6 +391,7 @@ public class ImageFilterApp extends Application {
 
 
     // Applies the sepia filter using Pixel writer and Writable image class
+    // Made by Morgan
     private void applySepiaFilter() {
         Image image = originalImageView.getImage();
         PixelReader pixelReader = image.getPixelReader();
@@ -418,7 +427,8 @@ public class ImageFilterApp extends Application {
         filteredImageView.setImage(writableImage);
     }
 
-//hiiiiiiiiiiiiiiiiiiiiiiiiii
+    // Converts the image to a negative image by subtracting 255 minus the current red, green, or blue value
+    // Made by Talon
     private void convertToNegative() {
         Image originalImage = originalImageView.getImage();
         int width = (int) originalImage.getWidth();
@@ -444,7 +454,8 @@ public class ImageFilterApp extends Application {
         filteredImageView.setImage(negativeImage);
     }
 
-    //this method increases the brightness of the original image
+    // this method increases the brightness of the original image by multiplying each rgb by 1.5
+    // Made by Elizabeth
     private void increaseBrightness() {
         Image originalImage = originalImageView.getImage();
         int width = (int) originalImage.getWidth();
